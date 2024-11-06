@@ -16,7 +16,7 @@ df = pd.read_csv(
     dtype={'postal_code': 'str', 'month_date_yyyymm': 'str'}
 )
 
-app = Dash(external_stylesheets=[dbc.themes.LUMEN])
+app = Dash(external_stylesheets=[dbc.themes.COSMO])
 
 app.layout = [
     html.P(

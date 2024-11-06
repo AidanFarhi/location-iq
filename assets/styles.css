@@ -4,6 +4,10 @@
     align-items: center;
 }
 
+#header {
+    font-size: larger;
+}
+
 .dropdown {
     width: 20vw;
     padding: 10px;
