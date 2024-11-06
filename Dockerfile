@@ -38,6 +38,7 @@ USER appuser
 # Copy the source code into the container.
 COPY app.py .
 COPY data ./data
+COPY assets ./assets
 
 # Expose the port that the application listens on.
 EXPOSE 8000

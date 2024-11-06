@@ -1,0 +1,30 @@
+#_dash-app-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.dropdown {
+    width: 20vw;
+    padding: 10px;
+}
+
+.graph {
+    width: 40vw;
+    height: 40vh;
+    padding: 10px;
+    min-width: 375px;
+    min-height: 300px;
+}
+
+#dropdown-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#graph-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}

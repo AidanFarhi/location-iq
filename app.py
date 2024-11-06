@@ -16,26 +16,41 @@ df = pd.read_csv(
     dtype={'postal_code': 'str', 'month_date_yyyymm': 'str'}
 )
 
-app = Dash(external_stylesheets=[dbc.themes.CYBORG])
+app = Dash(external_stylesheets=[dbc.themes.LUMEN])
 
 app.layout = [
-    html.H1(children='Location IQ', style={'textAlign':'center'}),
-    html.Div([
-        dcc.Dropdown(
-            options=sorted(df.month_date_yyyymm.unique()),
-            value='202401',
-            id='date-selection'
-        ),
-        dcc.Dropdown(
-            options=df.postal_code.unique(),
-            value='19977',
-            id='postal-code-selection'
-        ),
-    ]),
-    dcc.Graph(id='graph-median-price'),
-    dcc.Graph(id='graph-median-days-on-market'),
-    dcc.Graph(id='graph-active-listing-count'),
-    dcc.Graph(id='graph-price-reduced-count')
+    html.P(
+        id='header',
+        children='Location IQ'
+    ),
+    html.Div(
+        id='dropdown-container',
+        children=[
+            html.Label('Date:'),
+            dcc.Dropdown(
+                className='dropdown',
+                id='date-selection',
+                options=sorted(df.month_date_yyyymm.unique()),
+                value='202401'
+            ),
+            html.Label('Zip Code:'),
+            dcc.Dropdown(
+                className='dropdown',
+                id='postal-code-selection',
+                options=df.postal_code.unique(),
+                value='19977'
+            ),
+        ]
+    ),
+    html.Div(
+        id='graph-container',
+        children=[
+            dcc.Graph(className='graph', id='graph-median-price'),
+            dcc.Graph(className='graph', id='graph-median-days-on-market'),
+            dcc.Graph(className='graph', id='graph-active-listing-count'),
+            dcc.Graph(className='graph', id='graph-price-reduced-count')
+        ]
+    )
 ]
 
 @callback(
@@ -53,29 +68,25 @@ def update_figure(postal_code, date):
         x='month_date_yyyymm', 
         y='median_listing_price',
         title='Median Listing Price',
-        template='plotly_dark'
-    )
+    ).update_layout(title={'x': 0.5, 'xanchor': 'center'})
     median_days_on_market = px.line(
         data, 
         x='month_date_yyyymm', 
         y='median_days_on_market',
         title='Median Days On Market',
-        template='plotly_dark'
-    )
+    ).update_layout(title={'x': 0.5, 'xanchor': 'center'})
     active_listing_count = px.line(
         data, 
         x='month_date_yyyymm', 
         y='active_listing_count',
         title='Active Listing Count',
-        template='plotly_dark'
-    )
+    ).update_layout(title={'x': 0.5, 'xanchor': 'center'})
     price_reduced_count = px.line(
         data, 
         x='month_date_yyyymm', 
         y='price_reduced_count',
         title='Price Reduced Count',
-        template='plotly_dark'
-    )
+    ).update_layout(title={'x': 0.5, 'xanchor': 'center'})
     return median_price, median_days_on_market, active_listing_count, price_reduced_count
 
 if __name__ == '__main__':
