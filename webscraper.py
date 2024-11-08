@@ -31,6 +31,6 @@ for zip_code in zip_codes:
         print(f"Saved table for ZIP code {zip_code} to {file_name}")
     except Exception as e:
         print(f"Error: Table did not load in time or was not found for ZIP code {zip_code}.", e)
-    sleep(1)
+    sleep(120)
 
 driver.quit()
