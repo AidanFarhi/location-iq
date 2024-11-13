@@ -1,10 +1,10 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from time import sleep
+import random
+import requests
+from bs4 import BeautifulSoup
 import pandas as pd
+from time import sleep, time
 
+# Load ZIP codes from CSV
 df = pd.read_csv(
     'data/RDC_Inventory_Core_Metrics_Zip_History.csv',
     dtype={'postal_code': 'str'},
@@ -12,25 +12,43 @@ df = pd.read_csv(
 )
 zip_codes = list(filter(lambda x: x is not None, df.postal_code.unique()))
 
-driver = webdriver.Chrome()
+# User-agent list to simulate different browsers
+user_agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:42.0) Gecko/20100101 Firefox/42.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; AS; rv:11.0) like Gecko',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'
+]
+
+base_url = 'https://crimegrade.org/safest-places-in-'
+
+start_time = time()
 
 for zip_code in zip_codes:
-    driver.get("https://crimegrade.org/crime-by-zip-code/")
-    zip_field = driver.find_element(By.ID, "zip-code")
-    zip_field.send_keys(zip_code)
-    submit_button = driver.find_element(By.ID, "submit")
-    submit_button.click()
+    user_agent = random.choice(user_agents)
+    headers = {'User-Agent': user_agent}
+    url = f'{base_url}{zip_code}'
+    
     try:
-        table_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "gradeComponents"))
-        )
-        table_html = table_element.get_attribute("outerHTML")
-        file_name = f"data/raw_crime_data/{zip_code}.html"
-        with open(file_name, "w", encoding="utf-8") as file:
-            file.write(table_html)
-        print(f"Saved table for ZIP code {zip_code} to {file_name}")
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        table_element = soup.find(class_='gradeComponents')
+        
+        if table_element:
+            file_name = f'data/raw_crime_data/{zip_code}.html'
+            with open(file_name, 'w', encoding='utf-8') as file:
+                file.write(str(table_element))
+            print(f'Saved table for ZIP code {zip_code} to {file_name}')
+        else:
+            print(f'No table found for ZIP code {zip_code}')
+        
     except Exception as e:
-        print(f"Error: Table did not load in time or was not found for ZIP code {zip_code}.", e)
-    sleep(120)
+        print(f'Error: Could not retrieve data for ZIP code {zip_code}.', e)
+    
+    sleep(random.choice([7, 8, 9]))
 
-driver.quit()
+end_time = time()
+print(f'Elapsed time: {(end_time - start_time) / 60} minutes')
