@@ -23,31 +23,49 @@ user_agents = [
 
 base_url = 'https://crimegrade.org/safest-places-in-'
 
+# Retry parameters
+RETRY_LIMIT = 3
+TIMEOUT = 10
+
 start_time = time()
 
 for zip_code in zip_codes:
     user_agent = random.choice(user_agents)
     headers = {'User-Agent': user_agent}
     url = f'{base_url}{zip_code}'
+
+    attempt = 0
+    while attempt < RETRY_LIMIT:
+        try:
+            # Request with timeout and retry logic
+            response = requests.get(url, headers=headers, timeout=TIMEOUT)
+            response.raise_for_status()
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            table_element = soup.find(class_='gradeComponents')
+
+            if table_element:
+                file_name = f'data/raw_crime_data/{zip_code}.html'
+                with open(file_name, 'w', encoding='utf-8') as file:
+                    file.write(str(table_element))
+                print(f'Saved table for ZIP code {zip_code} to {file_name}')
+            else:
+                print(f'No table found for ZIP code {zip_code}')
+            
+            # If successful, break out of retry loop
+            break
+
+        except requests.exceptions.RequestException as e:
+            attempt += 1
+            print(f'Attempt {attempt} failed for ZIP code {zip_code}: {e}')
+            if attempt < RETRY_LIMIT:
+                sleep_time = random.choice([3, 5, 7])  # Backoff before retrying
+                print(f'Retrying in {sleep_time} seconds...')
+                sleep(sleep_time)
+            else:
+                print(f'Failed to retrieve data for ZIP code {zip_code} after {RETRY_LIMIT} attempts.')
     
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        
-        soup = BeautifulSoup(response.text, 'html.parser')
-        table_element = soup.find(class_='gradeComponents')
-        
-        if table_element:
-            file_name = f'data/raw_crime_data/{zip_code}.html'
-            with open(file_name, 'w', encoding='utf-8') as file:
-                file.write(str(table_element))
-            print(f'Saved table for ZIP code {zip_code} to {file_name}')
-        else:
-            print(f'No table found for ZIP code {zip_code}')
-        
-    except Exception as e:
-        print(f'Error: Could not retrieve data for ZIP code {zip_code}.', e)
-    
+    # Sleep between requests to avoid overwhelming the server
     sleep(random.choice([7, 8, 9]))
 
 end_time = time()
